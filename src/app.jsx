@@ -2,6 +2,17 @@ import { useState } from 'preact/hooks'
 import * as zip from '@zip.js/zip.js'
 import './app.css'
 
+const uniq = (arr) => {
+  let seen = {};
+  let u = [];
+  arr.forEach((v) => {
+    if (seen[v]) return;
+    seen[v] = true;
+    u.push(v);
+  });
+  return u;
+};
+
 export function App() {
   const [file, setFile] = useState(null);
   const [filename, setFilename] = useState('');
@@ -28,7 +39,7 @@ export function App() {
     let raw = ev.target.value || '';
     resetDownloadLink();
     setValuesRaw(raw);
-    setValues(raw.split('\n').filter((v) => !!v));
+    setValues(uniq(raw.split('\n').filter((v) => !!v)));
   };
   const patternedValues = () => {
     return values.map((v) => pattern.replace('$v', v).replace('$f', filename));
@@ -41,7 +52,7 @@ export function App() {
   };
   const handleBuild = async (ev) => {
     ev.preventDefault();
-    
+
     let zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true });
     patternedValues().forEach((pv) => {
       zipWriter.add(pv, new zip.BlobReader(file), {
@@ -59,13 +70,6 @@ export function App() {
       URL.revokeObjectURL(downloadLink);
     }
     setDownloadLink('');
-  };
-  const downloadButtonEnabled = () => {
-    return !!downloadLink;
-  };
-  const handleDownload = async (ev) => {
-    ev.preventDefault();
-    open(downloadLink, '_blank');
   };
 
   return (
@@ -85,17 +89,18 @@ export function App() {
                 <div className='pure-u-1' style='padding-top: 1em;'>
                   <label for='patterninput'>
                     Pattern
-                    <br/>
+                    <br />
                     <div style='display: flex; justify-content: space-between;'>
-                      <input 
-                        id='patterninput' 
+                      <input
+                        id='patterninput'
                         type='text'
                         style='flex-grow: 2;'
-                        value={pattern} 
+                        value={pattern}
                         onChange={handlePatternInput}
+                        onInput={handlePatternInput}
                       />
                       <button
-                        type='submit' 
+                        type='submit'
                         className='pure-button pure-button-primary'
                         style='margin: 0 1em;'
                         disabled={!buildButtonEnabled()}
@@ -131,13 +136,13 @@ export function App() {
             <div className='pure-u-2-3'>
               <table className='pure-table pure-table-bordered' style='width: 100%'>
                 <tbody>
-                  { patternedValues().map((v) => {
+                  {patternedValues().map((v) => {
                     return (
                       <tr>
-                        <td>{v}</td>
+                        <td><pre style='margin: 0'>{v}</pre></td>
                       </tr>
                     );
-                  }) }
+                  })}
                 </tbody>
               </table>
             </div>
