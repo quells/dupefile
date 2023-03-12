@@ -8,3 +8,9 @@
   min-height: 100vh;
   text-align: left;
 }
+
+.progress-bar {
+  width: 0%;
+  height: 3px;
+  background-color: rgb(28, 184, 65);
+}

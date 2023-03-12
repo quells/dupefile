@@ -45,6 +45,7 @@ export function App() {
     return values.map((v) => pattern.replace('$v', v).replace('$f', filename));
   };
 
+  const [progress, setProgress] = useState(0);
   const buildButtonEnabled = () => {
     const fileSelected = file && filename !== '';
     const valuesEntered = values.length > 0;
@@ -52,12 +53,16 @@ export function App() {
   };
   const handleBuild = async (ev) => {
     ev.preventDefault();
+    resetDownloadLink();
 
+    setProgress(1);
     let zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"), { bufferedWrite: true });
-    patternedValues().forEach((pv) => {
+    let pv = patternedValues();
+    pv.forEach((pv) => {
       zipWriter.add(pv, new zip.BlobReader(file), {
-        onstart: (total) => { console.log('starting', total); },
-        onprogress: (idx, total) => { console.log('progress', idx, total); },
+        onend: () => {
+          setProgress((p) => p + 1);
+        },
       });
     });
     let blobURL = URL.createObjectURL(await zipWriter.close());
@@ -70,6 +75,7 @@ export function App() {
       URL.revokeObjectURL(downloadLink);
     }
     setDownloadLink('');
+    setProgress(0);
   };
 
   return (
@@ -119,6 +125,11 @@ export function App() {
                       >Download</a>
                     </div>
                   </label>
+                </div>
+              </div>
+              <div className='pure-g'>
+                <div className='pure-u-1'>
+                  <div className='progress-bar' style={`width: ${100 * progress / (values.length+1)}%`}></div>
                 </div>
               </div>
             </fieldset>
